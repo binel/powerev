@@ -22,137 +22,59 @@ namespace Powerev
             // Matching just the powerball is $4, Power play can multiply this to $40 
             //
             // Prizes are exclusive - a single ticket can only yeild a single prize 
-           
-            var jackpot = 44_000_000.0;
+            
+            PlayBuilder.Jackpot = JackpotDownloader.GetJackpot().Result;
 
-            bool is10PowerPlayAvailable = jackpot < 150_000_000.0;
+            Console.WriteLine($"Provided jackpot: ${PlayBuilder.Jackpot}");
 
-            Console.WriteLine($"Provided jackpot: ${jackpot}");
 
-            List<Play> possiblePlays = new List<Play> {
-                new Play {
-                    WinningBalls = 0,
-                    WonPowerball = true,
-                    BasePrize = 4.0, 
-                },
-                new Play {
-                    WinningBalls = 1,
-                    WonPowerball = true,
-                    BasePrize = 4.0, 
-                },
-                new Play {
-                    WinningBalls = 2,
-                    WonPowerball = true,
-                    BasePrize = 7.0, 
-                },
-                new Play {
-                    WinningBalls = 3,
-                    WonPowerball = false,
-                    BasePrize = 7.0, 
-                },
-                new Play {
-                    WinningBalls = 3,
-                    WonPowerball = true,
-                    BasePrize = 100.0, 
-                },
-                new Play {
-                    WinningBalls = 4,
-                    WonPowerball = true,
-                    BasePrize = 100.0, 
-                },
-                new Play {
-                    WinningBalls = 4,
-                    WonPowerball = true,
-                    BasePrize = 50_000.0, 
-                },
-                new Play {
-                    WinningBalls = 5,
-                    WonPowerball = false,
-                    BasePrize = 1_000_000.0, 
-                },
-                new Play {
-                    WinningBalls = 5,
-                    WonPowerball = true,
-                    BasePrize = jackpot, 
-                }
-            };
-
-            foreach (var play in possiblePlays)
+            foreach (var play in PlayBuilder.BasePlays)
             {
                 Console.WriteLine(play);
             }
-            var ev = possiblePlays.Sum(p => p.ExpectedValue());
+            var ev = PlayBuilder.BasePlays.Sum(p => p.ExpectedValue());
             Console.WriteLine($"(Non power play) Total ev: {ev}. Expected win: {ev - 2.0}"); 
         }
 
-        public class Play
+        public static void Sim(Random rand)
         {
-            public int WinningBalls {get; set;}
+            // Choose the winning numbers 
+            List<int> winningNums = Enumerable.Range(1, 69)
+                .OrderBy(x => rand.Next())
+                .Take(5)
+                .ToList();
 
-            public bool WonPowerball {get; set;}
+            int powerBall = Enumerable.Range(1, 26)
+                .OrderBy(x => rand.Next())
+                .Take(1)
+                .First();
 
-            public int PowerPlayMultiplier {get; set;} = 1;
+            // Choose the played numbers 
+            List<int> playedNums = Enumerable.Range(1, 69)
+                .OrderBy(x => rand.Next())
+                .Take(5)
+                .ToList();
 
-            public double BasePrize {get; set;}
+            int playedPowerBall = Enumerable.Range(1, 26)
+                .OrderBy(x => rand.Next())
+                .Take(1)
+                .First();
 
-            public override string ToString()
-            {
-                if (!WonPowerball)
-                {
-                    return $"Match {WinningBalls} (no powerball). Prize {BasePrize}. Odds 1 in {1 / Odds()}. EV {ExpectedValue()}";
-                }
-                else 
-                {
-                    return $"Match {WinningBalls} + powerball. Prize {BasePrize}. Odds 1 in {1 / Odds()}. EV {ExpectedValue()}";
-                }
-            }
+            // Count the number of matching numbers
+            int matchingNumbers = playedNums.Intersect(winningNums).Count();
 
-            public double ExpectedValue()
-            {
-                return BasePrize / (1 / Odds());
-            }
+            // Check if the PowerBall matches
+            bool isPowerBallMatch = playedPowerBall == powerBall;
 
-            public double Odds() {
-                var totalPossibleTickets = Choose(69, 5) * Choose(26, 1);
-                var waysToPickLosers = Choose(64, 5 - WinningBalls); 
-                var waysToPickWinners = Choose(5, WinningBalls); 
-                long totalWays = waysToPickLosers * waysToPickWinners; 
-                if (!WonPowerball) 
-                {
-                    totalWays *= Choose(25, 1);
-                }
-                return (double) totalWays / (double) totalPossibleTickets;
-            }
-            
-            private static long Choose(int total, int choice) 
-            {
-                if (choice == 0)
-                {
-                    return 1;
-                }
+            // Output the results
+            Console.WriteLine("Winning Numbers: " + string.Join(", ", winningNums) + " PowerBall: " + powerBall);
+            Console.WriteLine("Played Numbers: " + string.Join(", ", playedNums) + " PowerBall: " + playedPowerBall);
+            Console.WriteLine("Matching Numbers: " + matchingNumbers);
+            Console.WriteLine("PowerBall Match: " + isPowerBallMatch);     
 
-                long num = 1; 
-                int num_total = total;
-                for (int i = 0; i < choice; i++) 
-                {
-                    num *= num_total; 
-                    num_total -= 1; 
-                }
-
-                return num / Fact(choice);
-            }
-
-            private static long Fact(int n) 
-            {
-                long result = 1; 
-                for (int i = 2; i <= n; i++)
-                {
-                    result *= i;
-                }
-
-                return result;
-            }
         }
+
+
 
     }
 }
