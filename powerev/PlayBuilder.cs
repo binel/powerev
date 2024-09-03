@@ -64,8 +64,11 @@ namespace Powerev {
                 }
             };
 
-        public static double GetPrize(int MatchingBalls, bool WonPowerball)
-        {
+        public static double GetTotalEv() {
+            return BasePlays.Sum(p => p.ExpectedValue()); 
+        }
+
+        public static double GetPrize(int MatchingBalls, bool WonPowerball) {
             var play  = BasePlays.Where(p => p.WinningBalls == MatchingBalls && p.WonPowerball == WonPowerball).FirstOrDefault();
 
             if (play == null) {

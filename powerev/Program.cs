@@ -6,8 +6,20 @@ namespace Powerev
     {
         static void Main(string[] args)
         {
-            PlayBuilder.Jackpot = 93_000_000.0;
+           for (double jackpot = 1_000_000.0;  jackpot < 1_000_000_000; jackpot += 1_000_000) {
+                PlayBuilder.Jackpot = jackpot;
+                var ev = PlayBuilder.GetTotalEv() - 2.0;
 
+                Console.WriteLine($"{jackpot} - ev: {ev}");
+
+                if (ev > 0) {
+                    Console.WriteLine($"Positive ev found at jackpot {jackpot}. Running 1000 sims to find how many ticket purchases are required to make at least 1K on average...");
+                    SimAtValue(1_000, 1_000, 1_000_000);
+                }
+           }
+        }
+
+        static void SimAtValue(int maxSimRuns, int requiredProfit, int maxTickets) {
             double runningTotal = 0.0; // how much money we've gained / lost 
             int tickets = 0; // total number of tickets we've bought 
         
@@ -15,31 +27,33 @@ namespace Powerev
             sim.NewNumbers();
             
             double averageWinnings = 0.0;
-            for (int simRuns = 0; simRuns < 1_000; simRuns++) {
+            double averageTickets = 0.0;
+            for (int simRuns = 0; simRuns < maxSimRuns; simRuns++) {
                 runningTotal = 0;
                 tickets = 0; 
-                while (runningTotal <= 0) {
+                while (runningTotal < requiredProfit) {
                     tickets++;
                     runningTotal -= 2.0;
-                    runningTotal += sim.Sim1Ticket();    
-                    if (tickets > 1_000_000) {
-                        // if we still aren't positive after a million tickets, give up. 
+                    runningTotal += sim.Sim1Ticket();
+
+                    if (tickets >= maxTickets) {
                         break;
                     }
                 }
                 if (runningTotal > 0) {
-                    Console.WriteLine($"{simRuns}: Positive Run: {runningTotal} with {tickets} tickets");
+                    Console.WriteLine($"\t{simRuns}: Positive Run: {runningTotal} with {tickets} tickets");
                 }
                 else {
-                    Console.WriteLine($"{simRuns}: Negative Run: {runningTotal} with {tickets} tickets");
+                    Console.WriteLine($"\t{simRuns}: Negative Run: {runningTotal} with {tickets} tickets");
                 }
+
                 averageWinnings += runningTotal;
+                averageTickets += (double)tickets;
             }
 
-            averageWinnings = averageWinnings / 1_000;
-
-            Console.WriteLine($"Average winnings over 1,000 sims: {averageWinnings}");
-
+            averageWinnings = averageWinnings / maxSimRuns;
+            averageTickets = averageTickets / maxSimRuns;
+            Console.WriteLine($"Average winnings over {maxSimRuns} sims: {averageWinnings}. Average tickets: {averageTickets}");
         }
     }
 }
