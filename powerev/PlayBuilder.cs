@@ -1,8 +1,20 @@
 using System;
+using System.Linq;
+
 namespace Powerev {
     public class PlayBuilder {
         
-        public static double Jackpot {get; set;}
+        private static double _jackpot;
+
+        public static double Jackpot {
+            get {
+                return _jackpot;
+            }
+            set {
+                _jackpot = value;
+                BasePlays.Where(p => p.WinningBalls == 5 && p.WonPowerball).First().BasePrize = value;
+            }
+        }
         
         public static List<Play> BasePlays {get;} =  new List<Play> {
                 new Play {
@@ -32,7 +44,7 @@ namespace Powerev {
                 },
                 new Play {
                     WinningBalls = 4,
-                    WonPowerball = true,
+                    WonPowerball = false,
                     BasePrize = 100.0, 
                 },
                 new Play {
@@ -51,5 +63,16 @@ namespace Powerev {
                     BasePrize = Jackpot, 
                 }
             };
+
+        public static double GetPrize(int MatchingBalls, bool WonPowerball)
+        {
+            var play  = BasePlays.Where(p => p.WinningBalls == MatchingBalls && p.WonPowerball == WonPowerball).FirstOrDefault();
+
+            if (play == null) {
+                return 0.0;
+            } else {
+                return play.BasePrize;
+            }
+        }
     }
 }
