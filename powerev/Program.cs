@@ -2,21 +2,25 @@
 
 namespace Powerev
 {
-    internal class Program
-    {
-        static void Main(string[] args)
-        {
-           for (double jackpot = 1_000_000.0;  jackpot < 1_000_000_000; jackpot += 1_000_000) {
+    internal class Program {
+        static void Main(string[] args) {
+            var maxSimRuns = int.Parse(args[0]);
+            var requiredProfit = int.Parse(args[1]);
+            var maxTickets = int.Parse(args[2]);
+            
+            Console.WriteLine($"Running with {maxSimRuns} sim runs, required profit {requiredProfit}, max tickets {maxTickets}");
+
+            for (double jackpot = 1_000_000.0;  jackpot < 1_000_000_000; jackpot += 1_000_000) {
                 PlayBuilder.Jackpot = jackpot;
                 var ev = PlayBuilder.GetTotalEv() - 2.0;
 
                 Console.WriteLine($"{jackpot} - ev: {ev}");
 
                 if (ev > 0) {
-                    Console.WriteLine($"Positive ev found at jackpot {jackpot}. Running 1000 sims to find how many ticket purchases are required to make at least 1K on average...");
-                    SimAtValue(1_000, 1_000, 1_000_000);
+                    Console.WriteLine($"Positive ev found at jackpot {jackpot}. Running sims...");
+                    SimAtValue(maxSimRuns, requiredProfit, maxTickets);
                 }
-           }
+            }
         }
 
         static void SimAtValue(int maxSimRuns, int requiredProfit, int maxTickets) {
@@ -36,7 +40,7 @@ namespace Powerev
                     runningTotal -= 2.0;
                     runningTotal += sim.Sim1Ticket();
 
-                    if (tickets >= maxTickets) {
+                    if (maxTickets != 0 && tickets >= maxTickets) {
                         break;
                     }
                 }

@@ -1,2 +1,4 @@
 powerev/obj/**
 powerev/bin/**
+*/.DS_Store
+.DS_Store
